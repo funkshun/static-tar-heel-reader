@@ -24,8 +24,9 @@ body {
 
 .selected {
   border-color: gold !important;
-  box-shadow: 0em 0em 3em 2em gold !important;
+  box-shadow: 0em 0em 3em 2em black !important;
   z-index: 10;
+  width: 25%;
 }
 
 a.next,
