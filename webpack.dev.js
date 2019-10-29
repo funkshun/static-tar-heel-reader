@@ -34,7 +34,7 @@ module.exports = {
     proxy: [
       {
         context: ["/content", "config.json"],
-        target: "https://gb.cs.unc.edu/static/tiny",
+        port: 8080,
         secure: false,
         changeOrigin: true
       }

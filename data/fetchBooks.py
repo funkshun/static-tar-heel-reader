@@ -7,8 +7,10 @@ import json
 
 books = SqliteDict("allbooks.sqlite", autocommit=True)
 
+sess = requests.Session()
 
 for page in range(1, 10000):
+    print (page)
     if page % 100 == 0:
         print(page)
     url = (
@@ -16,13 +18,13 @@ for page in range(1, 10000):
         "?search=&category=&reviewed=&audience=&language=&"
         f"page={page}&json=1"
     )
-    resp = requests.get(url)
+    resp = sess.get(url)
     r = resp.json()
     for b in r["books"]:
         if b["slug"] in books:
             continue
         url = "http://test.tarheelreader.org/book-as-json/" f'?slug={b["slug"]}'
-        resp = requests.get(url)
+        resp = sess.get(url)
         book = resp.json()
         books[b["slug"]] = book
     if not r["more"]:

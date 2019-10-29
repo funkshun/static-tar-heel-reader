@@ -4,7 +4,7 @@ import {
   Difference,
   Limit,
   RangeSet,
-  StringSet
+  StringSet // TODO: test ArraySet
 } from "./BookSet";
 
 const digits = 2;

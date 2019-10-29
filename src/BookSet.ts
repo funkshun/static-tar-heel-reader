@@ -11,7 +11,7 @@ export interface BookSet {
 
 /* incrementally computes the intersection of two sets */
 export class Intersection implements BookSet {
-  constructor(public A: BookSet, public B: BookSet) {}
+  constructor(public A: BookSet, public B: BookSet) { }
 
   /* a helper to advance both sequences until they match */
   align(a: string, b: string): string {
@@ -40,7 +40,7 @@ export class Intersection implements BookSet {
 
 /* incrementally computes the values in A that are not in B */
 export class Difference implements BookSet {
-  constructor(public A: BookSet, public B: BookSet) {}
+  constructor(public A: BookSet, public B: BookSet) { }
   public next(): string {
     let a = this.A.next();
     let b = this.B.skipTo(a);
@@ -62,7 +62,7 @@ export class Difference implements BookSet {
 }
 
 export class Limit implements BookSet {
-  constructor(public A: BookSet, public limit: string) {}
+  constructor(public A: BookSet, public limit: string) { }
   public next(): string {
     const r = this.A.next();
     return r <= this.limit ? r : "";
@@ -81,7 +81,7 @@ export class RangeSet implements BookSet {
     public stop: string,
     public digits: number,
     public base: number,
-  ) {}
+  ) { }
   current: string;
   public next(): string {
     if (!this.current) {

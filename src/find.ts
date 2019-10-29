@@ -59,10 +59,11 @@ interface CoverDB extends DBSchema {
 
 function getQueryTerms(): string[] {
   const searchBox = document.querySelector("#search") as HTMLInputElement;
-  const query = searchBox.value;
+  const query = searchBox.value.toLowerCase();
+  console.log(query);
   if (query.length) {
-    const pattern = /[a-z]{3,}/gi;
-    return query.match(pattern).map(stem);
+    const pattern = /[a-z]{3,}/gi;          // anything longer than 3 characters
+    return query.match(pattern).map(stem);  // stem the terms 
   } else {
     return [];
   }
