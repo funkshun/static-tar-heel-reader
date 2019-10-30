@@ -9,7 +9,8 @@
     "nosw": "webpack-dev-server --config webpack.dev.js --host 0.0.0.0 --public gb.cs.unc.edu --port 8081",
     "local": "webpack-dev-server --config webpack.dev.js --host 0.0.0.0 --public gb.cs.unc.edu",
     "tsc": "tsc --lib dom,es6,dom.iterable,scripthost",
-    "test": "jest"
+    "test": "jest",
+    "cov": "jest --coverage"
   },
   "test": "jest",
   "keywords": [],
@@ -26,7 +27,7 @@
     "ts-loader": "^6.0.4",
     "typescript": "^3.5.2",
     "webpack": "^4.39.2",
-    "webpack-cli": "^3.3.7",
+    "webpack-cli": "^3.3.9",
     "webpack-dev-server": "^3.8.0"
   },
   "dependencies": {

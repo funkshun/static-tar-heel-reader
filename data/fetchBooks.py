@@ -28,7 +28,6 @@ with requests.Session() as s:
                 if not r["more"]:
                     break
 
-
 rows = sorted(books.values(), key=lambda b: b["ID"])
 with gzip.open("books.json.gz", "wt", encoding="utf-8") as fp:
     json.dump(rows, fp)
