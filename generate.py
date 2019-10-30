@@ -15,7 +15,7 @@ import shutil
 import re
 from stemming.porter2 import stem
 import aspell
-from spellchecker import SpellChecker
+#from spellchecker import SpellChecker
 import contractions
 import pandas as pd
 import myArgs
@@ -87,7 +87,7 @@ selected = reviewed + unreviewed
 
 # activate the spell checkers
 spell = aspell.Speller("lang", "en")
-spell2 = SpellChecker()
+#spell2 = SpellChecker()
 
 
 def getWords(book):
@@ -104,7 +104,7 @@ def getWords(book):
         words += [
             stem(word).lower()
             for word in re.findall(r"[a-z]+", text, re.I)
-            if spell.check(word) or spell2.known([word])
+            if spell.check(word) #or spell2.known([word])
         ]
     return set(words)
 
