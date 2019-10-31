@@ -4,8 +4,9 @@ import {
   Difference,
   Limit,
   RangeSet,
-  StringSet
-} from "./BookSet";
+  StringSet,
+  ArraySet
+} from "../src/BookSet";
 
 const digits = 2;
 const base = 16;
@@ -126,3 +127,104 @@ test.each(setlimit)("Limit(%s, %s)", (s, l) => {
     limit(s2a(s), l)
   );
 });
+
+const genRandomStrings = (numStrings: number): string[] => {
+  const chars = 'abcdefghjiklmnopqrstuvwxyz';
+  const charsLen = chars.length;
+  let strs: string[] = [];
+  const stringLen = 5;
+
+  for (let i = 0; i < numStrings; i++) {
+    let result = '';
+    for (let l = 0; l < stringLen; l++) {
+      result += chars.charAt(Math.floor(Math.random() * charsLen));
+    }
+    strs.push(result);
+  }
+
+  strs.sort();
+  return strs;
+}
+
+test('Test ArraySet next', () => {
+  // generate some random strings
+  const testStrings = 10;
+  const strs = genRandomStrings(testStrings);
+
+  let arraySet = new ArraySet(strs);
+  let idx = 0;
+  while (idx < testStrings) {
+    expect(arraySet.next()).toEqual(strs[idx]);
+    idx++;
+  }
+  idx = 0;
+  while (idx < testStrings) {
+    expect(arraySet.next()).toEqual('');
+    idx++;
+  }
+});
+
+test('Test ArraySet skipTo', () => {
+  const testStrings = 10;
+  const strs = genRandomStrings(testStrings);
+
+  let idx = 0;
+  while(idx < testStrings) {
+    let arraySet = new ArraySet(strs);
+    // find a random string to skip ahead to
+    let randomString = strs[Math.floor(Math.random() * strs.length)];
+    expect(arraySet.skipTo(randomString)).toEqual(randomString);
+    idx++;
+  }
+
+  const vals = ['apples', 'bananas', 'oranges'];
+  let arraySet = new ArraySet(vals);
+  expect(arraySet.skipTo('bae')).toEqual('bananas');
+  expect(arraySet.skipTo('baseball')).toEqual('oranges');
+  expect(arraySet.skipTo('oranges')).toEqual('oranges');
+  expect(arraySet.skipTo('zebras')).toEqual('');
+});
+
+test('Intersection skipTo', () => {
+  let numsOne = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+  let numsTwo = ['one', 'four', 'nine', 'sixteen', 'twenty-five'];
+
+  numsOne = numsOne.sort();
+  numsTwo = numsTwo.sort();
+
+  let intersect = new Intersection(new ArraySet(numsOne), new ArraySet(numsTwo));
+  expect(intersect.skipTo('four')).toEqual('four');
+  expect(intersect.skipTo('help')).toEqual('nine');
+  expect(intersect.skipTo('nine')).toEqual('nine');
+  expect(intersect.skipTo('one')).toEqual('one');
+  expect(intersect.skipTo('zebra')).toEqual('');
+});
+
+test('Difference skipTo', () => {
+  let numsOne = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+  let numsTwo = ['one', 'four', 'nine', 'sixteen', 'twenty-five'];
+
+  numsOne = numsOne.sort();
+  numsTwo = numsTwo.sort();
+
+  let diff = new Difference(new ArraySet(numsOne), new ArraySet(numsTwo));
+
+  expect(diff.skipTo('five')).toEqual('five');
+  expect(diff.skipTo('four')).toEqual('seven');
+});
+
+test('Limit skipTo', () => {
+  let strs = ['apple', 'banana', 'orange', 'peach', 'grape', 'blueberry', 'grapefruit'];
+  strs = strs.sort();
+
+  const limit = new Limit(new ArraySet(strs), strs[Math.floor(strs.length/2)]);
+
+  expect(limit.skipTo('banana')).toEqual('banana');
+  expect(limit.skipTo('grape')).toEqual('grape');
+  expect(limit.skipTo('orange')).toEqual('');
+});
+
+test('RangeSet skipTo', () => {
+  let rangeset = new RangeSet('02', '10', 2, 16);
+  expect(rangeset.skipTo('01')).toEqual('02');
+})

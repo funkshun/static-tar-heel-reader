@@ -31,7 +31,13 @@ tiny: pages
 	cp -a web_modules /var/www/static
 
 test:
-	jest src
+	jest test --coverage
+
+fetch:
+	cd data && python fetchBooks.py $2
+
+generate:
+	python generate.py out="./dist" Nselect=$2
 
 install-dev:
 	npm install -g typescript jest stylelint stylelint-config-prettier stylelint-config-standard @pika/web
