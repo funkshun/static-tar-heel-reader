@@ -208,10 +208,10 @@ def imgurl(url, bid, bpath, session):
         r = encode(i, Dpictures)
         path = osp.join(CONTENT, *r) + ".jpg"
         os.makedirs(osp.dirname(path), exist_ok=True)
-        resp = session.get("http://tarheelreader.org" + url)
+        resp = session.get("http://tarheelreader.org" + url, stream=True)
         with open(path, 'wb') as f:
             resp.raw.decode_content = True
-            shutil.copyfileobj(resp.raw, path)
+            shutil.copyfileobj(resp.raw, f)
         imagemap[url] = path
     return osp.relpath(path, osp.dirname(bpath))
 
