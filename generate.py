@@ -13,6 +13,7 @@ import os.path as osp
 import itertools
 import shutil
 import re
+import requests
 from stemming.porter2 import stem
 import aspell
 #from spellchecker import SpellChecker
@@ -199,7 +200,7 @@ os.makedirs(OUT, exist_ok=True)
 imagemap = SqliteDict(osp.join(OUT, "imagemap.sd"), autocommit=True)
 
 
-def imgurl(url, bid, bpath):
+def imgurl(url, bid, bpath, session):
     """localize and return full image url for a picture"""
     if url in imagemap:
         path = imagemap[url]
@@ -208,7 +209,10 @@ def imgurl(url, bid, bpath):
         r = encode(i, Dpictures)
         path = osp.join(CONTENT, *r) + ".jpg"
         os.makedirs(osp.dirname(path), exist_ok=True)
-        shutil.copyfile(args.images + url, path)
+        resp = session.get("http://tarheelreader.org" + url)
+        with open(path, 'wb') as f:
+            resp.raw.decode_content = True
+            shutil.copyfileobj(resp.raw, path)
         imagemap[url] = path
     return osp.relpath(path, osp.dirname(bpath))
 
@@ -229,12 +233,13 @@ for progress, book in enumerate(books):
         lastReviewed = bid
     last = bid
     ipath = osp.join(osp.dirname(bpath), "index.html")
+    sess = requests.Session()
     ndx.append(
         dict(
             title=book["title"],
             author=book["author"],
             pages=len(book["pages"]),
-            image=imgurl(book["pages"][0]["url"], bid, bpath),
+            image=imgurl(book["pages"][0]["url"], bid, bpath, sess),
             icons=" ".join(icons),
             id=bid,
             link=bid[-1],
@@ -246,7 +251,7 @@ for progress, book in enumerate(books):
         dict(
             title=book["title"],
             author=book["author"],
-            image=imgurl(book["pages"][1]["url"], bid, bpath),
+            image=imgurl(book["pages"][1]["url"], bid, bpath, sess),
             id=make_pageid(1),
             back=view["index"],
             next="#" + make_pageid(2),
@@ -258,7 +263,7 @@ for progress, book in enumerate(books):
             dict(
                 pageno=pageno,
                 id=make_pageid(pageno),
-                image=imgurl(page["url"], bid, bpath),
+                image=imgurl(page["url"], bid, bpath, sess),
                 text=page["text"],
                 back="#" + make_pageid(pageno - 1),
                 next="#" + make_pageid(pageno + 1),

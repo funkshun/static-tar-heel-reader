@@ -3,12 +3,13 @@ import requests
 from sqlitedict import SqliteDict
 import gzip
 import json
+import sys
 
 
 books = SqliteDict("allbooks.sqlite", autocommit=True)
 
 with requests.Session() as s:
-    for page in range(1, 10000):
+    for page in range(1, int(sys.argv[1])):
         if page % 10 == 0:
             print(page)
         url = (

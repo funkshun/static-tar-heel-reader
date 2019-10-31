@@ -8,3 +8,5 @@ dist
 env/
 *progress*
 coverage
+content/
+__pycache__/
