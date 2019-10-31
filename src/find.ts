@@ -23,13 +23,13 @@ interface Config {
 let config: Config;
 
 // persistant state
-import state from "./state";
+import state from "./state.js";
 // porter2 stemmer
-import { stem } from "stemr";
+import { stem } from "./web_modules/stemr.js";
 
-import swipe from "./swipe";
+import swipe from "./swipe.js";
 
-import { registerServiceWorker } from "./start-sw";
+import { registerServiceWorker } from "./start-sw.js";
 
 import {
   BookSet,
@@ -39,11 +39,11 @@ import {
   RangeSet,
   StringSet,
   ArraySet
-} from "./BookSet";
+} from "./BookSet.js";
 
-import speak from "./speech";
+import speak from "./speech.js";
 
-import { openDB, DBSchema } from "idb";
+import { openDB, DBSchema } from "./web_modules/idb.js";
 
 interface ICover {
   id: string;
@@ -59,10 +59,10 @@ interface CoverDB extends DBSchema {
 
 function getQueryTerms(): string[] {
   const searchBox = document.querySelector("#search") as HTMLInputElement;
-  const query = searchBox.value.toLowerCase();
+  const query = searchBox.value;
   if (query.length) {
-    const pattern = /[a-z]{3,}/gi;          // anything longer than 3 characters
-    return query.match(pattern).map(stem);  // stem the terms 
+    const pattern = /[a-z]{3,}/gi;
+    return query.match(pattern).map(stem);
   } else {
     return [];
   }
@@ -89,7 +89,7 @@ async function getBookCover(bid: string): Promise<HTMLElement | null> {
     "content/" +
     bid
       .split("")
-      .slice(0, -1) // slice everything except the last element of the array
+      .slice(0, -1)
       .join("/") +
     "/";
   const db = await openDB<CoverDB>("Covers", 1, {
@@ -124,7 +124,6 @@ async function getBookCover(bid: string): Promise<HTMLElement | null> {
     const doc = parser.parseFromString(itemEntry.html, "text/html");
     item = doc.getElementById(bid);
   }
-
   if (item) {
     // fix the image URL
     const img: HTMLImageElement = item.querySelector("img");
@@ -137,7 +136,6 @@ async function getBookCover(bid: string): Promise<HTMLElement | null> {
       item.classList.add("F");
     }
   }
-
   return item;
 }
 
@@ -168,17 +166,14 @@ async function find() {
       }
       return new Intersection(p, c);
     });
-
     if (state.reviewed) {
       ids = new Limit(ids, config.lastReviewed);
     }
-    
     if (state.audience == "E") {
       const caution = await getIndexForTerm("CAUTION");
       ids = new Difference(ids, caution);
     }
   }
-  
   displayedIds.length = 0;
   if (location.hash) {
     const backFrom = location.hash.slice(1);
