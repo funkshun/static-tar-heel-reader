@@ -10,3 +10,4 @@ env/
 coverage
 content/
 __pycache__/
+.vscode
