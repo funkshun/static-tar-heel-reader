@@ -41,3 +41,7 @@ generate:
 
 install-dev:
 	npm install -g typescript jest stylelint stylelint-config-prettier stylelint-config-standard @pika/web
+
+run-local: pages
+	tsc
+	cd dist && python -m http.server
