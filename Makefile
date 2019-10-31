@@ -2,7 +2,7 @@ pages: dist/find.html dist/settings.html dist/favorites.html dist/choose.html di
 
 dist/%.html: src/%.html
 	python ./copypage.py $<
-	
+
 dist/find.html: src/find.html src/find.css src/head.mako src/menu.mako
 
 dist/choose.html: src/choose.html src/find.css src/head.mako src/menu.mako
@@ -31,7 +31,13 @@ tiny: pages
 	cp -a web_modules /var/www/static
 
 test:
-	jest src
+	jest test --coverage
+
+fetch:
+	cd data && python fetchBooks.py $2
+
+generate:
+	python generate.py out="./dist" Nselect=$2
 
 install-dev:
 	npm install -g typescript jest stylelint stylelint-config-prettier stylelint-config-standard @pika/web
