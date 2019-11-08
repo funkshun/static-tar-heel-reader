@@ -335,6 +335,11 @@ for word, slugs in wordToSlugs.iteritems():
     with open(osp.join(WOUT, word), "wt", encoding="utf-8") as fp:
         fp.write("".join(ids))
 
+all_words = ' '.join(filter(lambda word: word.upper() != word, wordToSlugs.keys()))
+print (f'All Words: {all_words}')
+with open(osp.join(WOUT, "ALLWORDS"), "wt", encoding="utf-8") as fp:
+    fp.write(all_words)
+
 # make sure CAUTION exists
 with open(osp.join(WOUT, "CAUTION"), "at", encoding="utf-8") as fp:
     fp.write("")
