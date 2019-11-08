@@ -10,3 +10,4 @@ coverage
 content/
 __pycache__/
 .vscode
+*.gz
