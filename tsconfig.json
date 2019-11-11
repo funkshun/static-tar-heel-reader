@@ -1,8 +1,16 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
     "target": "es2019",
-    "noImplicitAny": true,
-    "sourceMap": true
-  }
+    "module": "es6",
+    "moduleResolution": "node",
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "./web_modules/*.js": ["node_modules/*", "web_modules/*.js"]
+    }
+  },
+"exclude":[
+        "test"
+    ]
 }

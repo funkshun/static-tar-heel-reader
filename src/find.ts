@@ -23,13 +23,13 @@ interface Config {
 let config: Config;
 
 // persistant state
-import state from "./state";
+import state from "./state.js";
 // porter2 stemmer
-import { stem } from "stemr";
+import { stem } from "./web_modules/stemr.js";
 
-import swipe from "./swipe";
+import swipe from "./swipe.js";
 
-import { registerServiceWorker } from "./start-sw";
+import { registerServiceWorker } from "./start-sw.js";
 
 import {
   BookSet,
@@ -39,11 +39,11 @@ import {
   RangeSet,
   StringSet,
   ArraySet
-} from "./BookSet";
+} from "./BookSet.js";
 
-import speak from "./speech";
+import speak from "./speech.js";
 
-import { openDB, DBSchema } from "idb";
+import { openDB, DBSchema } from "./web_modules/idb.js";
 
 interface ICover {
   id: string;
@@ -59,10 +59,13 @@ interface CoverDB extends DBSchema {
 
 function getQueryTerms(): string[] {
   const searchBox = document.querySelector("#search") as HTMLInputElement;
-  const query = searchBox.value;
-  if (query.length) {
-    const pattern = /[a-z]{3,}/gi;
-    return query.match(pattern).map(stem);
+  const query = searchBox.value.toLowerCase();
+  // get all words longer than 3 characters (matches the index generation process)
+  const pattern = /[a-z]{3,}/gi;
+  let match;
+  if (query.length && (match = query.match(pattern))) {
+    // stem all the matching words from the search query
+    return match.map(stem);
   } else {
     return [];
   }
@@ -70,17 +73,42 @@ function getQueryTerms(): string[] {
 
 async function getIndexForTerm(term: string): Promise<BookSet | null> {
   const resp = await fetch("content/index/" + term);
-  let result;
-  if (resp.ok) {
+
+  if (resp.ok) { // i.e. if the term exists in our index
     const text = await resp.text();
     if (text.indexOf("-") > 0) {
+      // happens with the AllAvailable index only
       const parts = text.split("-");
-      result = new RangeSet(parts[0], parts[1], config.digits, config.base);
+      // RangeSet iterates from one encoding to another
+      return new RangeSet(parts[0], parts[1], config.digits, config.base);
     } else {
-      result = new StringSet(text, config.digits);
+      // StringSet iterates over a string according to a given iterator amount (here, the (number of) 
+      // digits used to represent the book ID)
+      return new StringSet(text, config.digits);
     }
   }
-  return result;
+
+  // term is not in the index - maybe it's a substring?
+  const respAll = await fetch("content/index/ALLWORDS");
+  if (respAll.ok) {
+    const text: string = await respAll.text();
+    const words: string[] = text.split(' ');
+    const substrings: string[] = words.filter(word => word.indexOf(term) >= 0);
+    let result = null;
+    for (let str of substrings) {
+      const respTerm = await fetch('content/index/' + str);
+      const books = await respTerm.text();
+      const currBook = new StringSet(books, config.digits);
+      if (result == null) {
+        result = currBook;
+      } else {
+        result = new Intersection(result, currBook);
+      }
+    }
+    return result;
+  }
+
+  return null;
 }
 
 async function getBookCover(bid: string): Promise<HTMLElement | null> {
@@ -89,7 +117,7 @@ async function getBookCover(bid: string): Promise<HTMLElement | null> {
     "content/" +
     bid
       .split("")
-      .slice(0, -1)
+      .slice(0, -1) // slice everything but the last part (makes sense since getting relative path prefix)
       .join("/") +
     "/";
   const db = await openDB<CoverDB>("Covers", 1, {
@@ -149,13 +177,20 @@ async function find() {
     ids = new ArraySet(state.fav.bookIds);
   } else {
     const terms = getQueryTerms();
-    terms.push("AllAvailable");
+    if (terms.length == 0) {
+      terms.push("AllAvailable");
+    }
     if (state.category) {
       terms.push(state.category);
     }
     if (state.audience == "C") {
       terms.push("CAUTION");
     }
+
+    console.log('Terms: ' + terms);
+
+    // reset page on find (in case someone enters a find while on page 2, etc.)
+    page = 0;
 
     let tsets = await Promise.all(terms.map(getIndexForTerm));
     ids = tsets.reduce((p, c) => {
@@ -166,6 +201,7 @@ async function find() {
       }
       return new Intersection(p, c);
     });
+
     if (state.reviewed) {
       ids = new Limit(ids, config.lastReviewed);
     }
@@ -174,7 +210,11 @@ async function find() {
       ids = new Difference(ids, caution);
     }
   }
+
+  console.log(ids);
+
   displayedIds.length = 0;
+
   if (location.hash) {
     const backFrom = location.hash.slice(1);
     console.log("skipping to", backFrom);
@@ -206,7 +246,8 @@ async function render() {
 
   // determine where to start
   let offset = page * state.booksPerPage;
-  for (let i = 0; i < state.booksPerPage + 1; i++) {
+  console.log(page, state.booksPerPage, offset);
+  for (let i = 0; i <= state.booksPerPage; i++) {
     const o = i + offset;
     const bid = displayedIds[o] || ids.next();
     if (!bid) {
@@ -236,7 +277,7 @@ function updateState(): void {
   state.audience = form.audience.value;
 }
 
-function updateControls(form: HTMLFormElement): void {}
+function updateControls(form: HTMLFormElement): void { }
 
 /* allow switch (keyboard) selection of books */
 function moveToNext() {
