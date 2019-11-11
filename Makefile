@@ -45,3 +45,6 @@ install-dev:
 run-local: pages
 	tsc
 	cd dist && python3 -m http.server
+
+clean: 
+	rm -rf dist

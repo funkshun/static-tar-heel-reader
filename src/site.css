@@ -23,10 +23,11 @@ body {
 }
 
 .selected {
-  border-color: gold !important;
-  box-shadow: 0em 0em 3em 2em black !important;
+  border-color: black !important;
+  box-shadow: 0em 0em 2.5em .10em black !important;
   z-index: 10;
-  width: 25%;
+  transition: all .2s ease-in-out;
+  transform: scale(1.05);
 }
 
 a.next,
