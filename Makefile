@@ -1,7 +1,7 @@
 pages: dist/find.html dist/settings.html dist/favorites.html dist/choose.html dist/index.html dist/web_modules/stemr.js dist/web_modules/idb.js
 
 dist/%.html: src/%.html
-	python ./copypage.py $<
+	python3 ./copypage.py $<
 	
 dist/find.html: src/find.html src/find.css src/head.mako src/menu.mako
 
@@ -34,14 +34,14 @@ test:
 	jest test --coverage
 
 fetch:
-	cd data && python fetchBooks.py $2
+	cd data && python3 fetchBooks.py $2
 
 generate:
-	python generate.py out="./dist" Nselect=$2
+	python3 generate.py out="./dist" Nselect=$2
 
 install-dev:
 	npm install -g typescript jest stylelint stylelint-config-prettier stylelint-config-standard @pika/web
 
 run-local: pages
 	tsc
-	cd dist && python -m http.server
+	cd dist && python3 -m http.server
