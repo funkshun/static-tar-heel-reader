@@ -176,15 +176,17 @@ async function find() {
   if (state.mode === "choose" || state.mode === "edit") {
     ids = new ArraySet(state.fav.bookIds);
   } else {
-    const terms = getQueryTerms();
-    if (terms.length == 0) {
-      terms.push("AllAvailable");
-    }
+    let terms = getQueryTerms();
     if (state.category) {
       terms.push(state.category);
+      // put category before pushing AllAvailable so that if category is empty we 
+      // return an empty subset intead of full list
     }
     if (state.audience == "C") {
       terms.push("CAUTION");
+    }
+    if (terms.length == 0) {
+      terms.push("AllAvailable");
     }
 
     console.log('Terms: ' + terms);
