@@ -279,8 +279,6 @@ function updateState(): void {
   state.audience = form.audience.value;
 }
 
-function updateControls(form: HTMLFormElement): void { }
-
 /* allow switch (keyboard) selection of books */
 function moveToNext() {
   // get the currently selected if any
@@ -400,8 +398,8 @@ async function init() {
 
   /* switch control based on keys */
   window.addEventListener("keydown", e => {
-    const t = e.target as HTMLElement;
-    if (t.matches("input,select,button")) {
+    const target = e.target as HTMLElement;
+    if (target.matches("input,select,button")) {
       return;
     }
     if (e.key == "ArrowRight" || e.key == "Space") {
@@ -426,7 +424,7 @@ async function init() {
   /* toggle favorite selection mode */
   const heart = document.querySelector("#heart");
   if (heart) {
-    heart.addEventListener("click", e => {
+    heart.addEventListener("click", () => {
       document.body.classList.toggle("hearts");
     });
   }
