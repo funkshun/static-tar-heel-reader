@@ -27,18 +27,20 @@ class State {
   };
 
   constructor() {
-    const s = localStorage.getItem("state");
-    const o = (s && JSON.parse(s)) || {};
-    if (o && o.version === version) {
-      Object.assign(this, o);
+    const state = localStorage.getItem("state");
+    const stateParsed = (state && JSON.parse(state)) || {};
+    if (stateParsed && stateParsed.version === version) {
+      // move parsed state into this
+      Object.assign(this, stateParsed);
     }
     this.persist();
   }
 
   public persist() {
-    const o = Object.assign({}, this, { version });
-    const s = JSON.stringify(o);
-    localStorage.setItem("state", s);
+    // clone this and object with version into a new object
+    const clonedState = Object.assign({}, this, { version });
+    const stateJSON = JSON.stringify(clonedState);
+    localStorage.setItem("state", stateJSON);
   }
 }
 

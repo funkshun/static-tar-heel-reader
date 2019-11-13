@@ -7,25 +7,27 @@ declare const workbox: any;
 workbox.loadModule("workbox-strategies");
 workbox.loadModule("workbox-precaching");
 
+// route for fetching images
 workbox.routing.registerRoute(
-  /.jpg|.png/,
+  /\.(?:jpg|png)$/,
   new workbox.strategies.CacheFirst({
     cacheName: "img-cache",
     plugins: [
       new workbox.expiration.Plugin({
-        maxAgeSeconds: 30 * 24 * 60 * 60
+        maxAgeSeconds: 30 * 24 * 60 * 60 // 30 days
       })
     ]
   })
 );
 
+// route for html, css, js, or json files
 workbox.routing.registerRoute(
-  /.html|.css|.js|.json/,
+  /\.(?:html|css|js|json)$/,
   new workbox.strategies.CacheFirst({
     cacheName: "html-cache",
     plugins: [
       new workbox.expiration.Plugin({
-        maxAgeSeconds: 30 * 24 * 60 * 60
+        maxAgeSeconds: 30 * 24 * 60 * 60 // 30 days
       })
     ]
   })
@@ -33,10 +35,16 @@ workbox.routing.registerRoute(
 
 workbox.precaching.precacheAndRoute([]);
 
+// cache the all available file
 workbox.routing.registerRoute(/.\/content\/index\/AllAvailable$/, async () => {
   let ids = getAllAvailableIDs();
   return new Response(await ids);
 });
+
+workbox.routing.registerRoute(/.\/content\/index\/ALLWORDS$/, async () => {
+  const words = getWords();
+  return new Response(await words);
+})
 
 workbox.routing.registerRoute(
   /.\/content\/index/,
@@ -44,7 +52,7 @@ workbox.routing.registerRoute(
     cacheName: "index-cache",
     plugins: [
       new workbox.expiration.Plugin({
-        maxAgeSeconds: 30 * 24 * 60 * 60
+        maxAgeSeconds: 30 * 24 * 60 * 60 // 30 days
       })
     ]
   })
@@ -89,4 +97,32 @@ async function getAllAvailableIDs(): Promise<string> {
   });
 
   return ids;
+}
+
+/* Function to get all the index words (stemmed forms), or, if offline, get all those that are in the cache */
+async function getWords(): Promise<string> {
+  if (navigator.onLine) {
+    let allWordsRequest = await fetch("./content/index/ALLWORD");
+    if (allWordsRequest.ok) {
+      return allWordsRequest.text();
+    }
+  }
+
+  // if offline
+  let words = '';
+
+  const cache = await caches.open('index-cache');
+  const keys = await cache.keys();
+
+  if (keys.length == 0) {
+    return '';
+  }
+
+  keys.forEach((request, index, array) => {
+    const url = request.url;
+    const word = url.split('/').slice(-1)[0];
+    words += word + ' ';
+  });
+
+  return words;
 }

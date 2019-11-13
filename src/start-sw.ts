@@ -1,15 +1,16 @@
 // Registers service worker.
 
 export function registerServiceWorker() {
-    console.log('here');
+  console.log('Registering Service Worker!');
   if ("serviceWorker" in navigator) {
+    // checks if browser supports service workers
     if (location.host === "localhost:8081") {
       console.log("skipping service worker");
       return;
     }
     navigator.serviceWorker
       .register("worker.js")
-      .then(function() {
+      .then(function () {
         console.log("Service worker registered!");
       })
       .catch(err => {

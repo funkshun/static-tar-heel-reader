@@ -14,6 +14,7 @@ from shutil import copyfileobj
 from re import findall as regex_findall, IGNORECASE
 from requests import Session
 from nltk.stem.porter import PorterStemmer
+from nltk.corpus import stopwords
 from spellchecker import SpellChecker
 from contractions import fix as contractions_fix
 from pandas import DataFrame
@@ -27,7 +28,7 @@ args = myArgs.Parse(
     Nselect=100,
     minPages=6,
     maxPages=20,
-    out=str,
+    out="dist",
     query="",
     hasCat=True,
     hasAudience=True,
@@ -91,6 +92,14 @@ selected = reviewed + unreviewed
 # activate the spell checkers
 spell = SpellChecker()
 
+# activate stemmer
+stemmer = PorterStemmer()
+
+# get stop words (the, is, are, etc.)
+stop_words = set(stopwords.words('english'))
+# TODO: question - filter based on if a word is a stop word or if it stems to a stem of a stop word?
+# note using this gives 463 less (words x slugs) pairs and 43 less index entries
+# stop_words_stems = set([stemmer.stem(word) for word in stop_words])
 
 def getWords(book, stemmer):
     """Return words from the book
@@ -106,12 +115,12 @@ def getWords(book, stemmer):
         words += [
             stemmer.stem(word).lower()
             for word in regex_findall(r"[a-z]+", text, flags=IGNORECASE)
-            if spell.known(words=[word])
+            if spell.known(words=[word]) and word not in stop_words
         ]
+        # do this?
+        # words = [word for word in words if word not in stop_words_stems]
+
     return set(words)
-
-
-stemmer = PorterStemmer()
 
 index = []
 for book in selected:
@@ -127,12 +136,11 @@ for book in selected:
 
 index = DataFrame(index, columns=['word', 'slug'])
 
-print(f'(Words, Slugs): {index.shape}')
+print(f'(Words x Slugs): {index.shape[0]}')
 
 # repeat because dropping some might change inclusion of others
 slug_set = set(index.slug.unique())
 word_set = set(index.word.unique())
-i = 0
 while True:
     # drop the words that only occur a few times
     booksPerWord = index.groupby("word").slug.count()
