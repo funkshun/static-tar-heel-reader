@@ -250,12 +250,12 @@ async function render() {
   let offset = page * state.booksPerPage;
   console.log(page, state.booksPerPage, offset);
   for (let i = 0; i <= state.booksPerPage; i++) {
-    const o = i + offset;
-    const bid = displayedIds[o] || ids.next();
+    const currOffset = i + offset;
+    const bid = displayedIds[currOffset] || ids.next();
     if (!bid) {
       break;
     }
-    displayedIds[o] = bid;
+    displayedIds[currOffset] = bid;
     if (i >= state.booksPerPage) {
       break;
     }
@@ -292,6 +292,8 @@ function moveToNext() {
   // if was selected, unselect it and compute the index of the next one
   if (selected) {
     selected.classList.remove("selected");
+    // have to do this funky thing b/c selectable does not have an indexOf method
+    // essentially this calls selectable.indexOf(selected)
     next = ([].indexOf.call(selectable, selected) + 1) % selectable.length;
   }
   selected = selectable[next];
