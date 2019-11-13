@@ -47,7 +47,6 @@ have reviewed books first followed by unreviewed in order they were created.
 
 ## To Do
 
-- Identify _stop_ words; we don't need to index 'the' for example.
 - Come up with an ordering for the books based on popularity, quality, etc.
 - Tell the user if a word is not in the index.
 - Assign categories to more books.
