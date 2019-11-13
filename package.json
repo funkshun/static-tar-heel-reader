@@ -2,37 +2,12 @@
   "name": "thr",
   "version": "1.0.0",
   "scripts": {
-<<<<<<< HEAD
-    "build": "webpack --config webpack.dev.js",
-    "production": "webpack  --config webpack.prod.js --mode=production",
-    "start": "webpack-dev-server --config webpack.dev.js",
-    "nosw": "webpack-dev-server --config webpack.dev.js --host 0.0.0.0 --public gb.cs.unc.edu --port 8081",
-    "local": "webpack-dev-server --config webpack.dev.js --host 0.0.0.0 --public gb.cs.unc.edu",
-    "tsc": "tsc --lib dom,es6,dom.iterable,scripthost",
-    "test": "jest",
-    "coverage" : "jest --coverage"
-=======
     "prepare": "pika-web --dest=src/web_modules"
->>>>>>> a44266fff6f20857e63ca246c9871cc633430b37
   },
   "test": "jest",
   "devDependencies": {
     "@types/jest": "^24.0.18",
-<<<<<<< HEAD
-    "@types/workbox-sw": "^4.2.0",
-    "jest": "^24.9.0",
-    "stylelint": "^10.1.0",
-    "stylelint-config-prettier": "^5.2.0",
-    "stylelint-config-standard": "^18.3.0",
-    "ts-jest": "^24.0.2",
-    "ts-loader": "^6.0.4",
-    "typescript": "^3.5.2",
-    "webpack": "^4.39.2",
-    "webpack-cli": "^3.3.9",
-    "webpack-dev-server": "^3.8.0"
-=======
     "typescript": "^3.6.4"
->>>>>>> a44266fff6f20857e63ca246c9871cc633430b37
   },
   "dependencies": {
     "idb": "^4.0.4",
