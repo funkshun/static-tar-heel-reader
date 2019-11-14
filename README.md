@@ -63,7 +63,7 @@ I am assuming the IDs in these index files are in ascending order. Currently, I 
 
 ### Testing
 
-To run the test suite, run the command `make test`. This runs the command `jest test --coverage`, whiich both runs the jest test (`\*.test.ts` files) and generates a coverage report. However, note that unit testing is only one part of a broader testing framework. See [this page](http://tarheelreader.web.unc.edu/test-coverage-report/) for a more complete discussion of this site's testing.
+To run the test suite, run the command `make test`. This runs the command `jest test --coverage`, which both runs the jest test (`*.test.ts` files) and generates a coverage report. However, note that unit testing is only one part of a broader testing framework. See [this page](http://tarheelreader.web.unc.edu/test-coverage-report/) for a more complete discussion of this site's testing.
 
 ### Deployment 
 
@@ -84,7 +84,7 @@ For more background information, see our [site](http://tarheelreader.web.unc.edu
 - Dr. Gary Bishop ([Github](https://github.com/gbishop), [Site](https://www.cs.unc.edu/~gb/))
 - [Boo Fullwood](https://github.com/funkshun)
 - [Taylor Smith](https://github.com/tas12740)
-- [Selina Zhang] (https://github.com/selina98)
+- [Selina Zhang](https://github.com/selina98)
 
 ### License
 
