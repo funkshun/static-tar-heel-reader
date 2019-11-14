@@ -34,10 +34,10 @@ test:
 	jest test --coverage
 
 fetch:
-	cd data && python3 fetchBooks.py $2
+	cd data && python3 fetchBooks.py $(out)
 
 generate:
-	python3 generate.py out="./dist" Nselect=$2
+	python3 generate.py out="./dist" Nselect=$(Nselect)
 
 install-dev:
 	npm install -g typescript jest stylelint stylelint-config-prettier stylelint-config-standard @pika/web
