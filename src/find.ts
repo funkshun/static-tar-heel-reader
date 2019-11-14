@@ -176,15 +176,17 @@ async function find() {
   if (state.mode === "choose" || state.mode === "edit") {
     ids = new ArraySet(state.fav.bookIds);
   } else {
-    const terms = getQueryTerms();
-    if (terms.length == 0) {
-      terms.push("AllAvailable");
-    }
+    let terms = getQueryTerms();
     if (state.category) {
       terms.push(state.category);
+      // put category before pushing AllAvailable so that if category is empty we 
+      // return an empty subset intead of full list
     }
     if (state.audience == "C") {
       terms.push("CAUTION");
+    }
+    if (terms.length == 0) {
+      terms.push("AllAvailable");
     }
 
     console.log('Terms: ' + terms);
@@ -248,12 +250,12 @@ async function render() {
   let offset = page * state.booksPerPage;
   console.log(page, state.booksPerPage, offset);
   for (let i = 0; i <= state.booksPerPage; i++) {
-    const o = i + offset;
-    const bid = displayedIds[o] || ids.next();
+    const currOffset = i + offset;
+    const bid = displayedIds[currOffset] || ids.next();
     if (!bid) {
       break;
     }
-    displayedIds[o] = bid;
+    displayedIds[currOffset] = bid;
     if (i >= state.booksPerPage) {
       break;
     }
@@ -277,8 +279,6 @@ function updateState(): void {
   state.audience = form.audience.value;
 }
 
-function updateControls(form: HTMLFormElement): void { }
-
 /* allow switch (keyboard) selection of books */
 function moveToNext() {
   // get the currently selected if any
@@ -292,6 +292,8 @@ function moveToNext() {
   // if was selected, unselect it and compute the index of the next one
   if (selected) {
     selected.classList.remove("selected");
+    // have to do this funky thing b/c selectable does not have an indexOf method
+    // essentially this calls selectable.indexOf(selected)
     next = ([].indexOf.call(selectable, selected) + 1) % selectable.length;
   }
   selected = selectable[next];
@@ -398,8 +400,8 @@ async function init() {
 
   /* switch control based on keys */
   window.addEventListener("keydown", e => {
-    const t = e.target as HTMLElement;
-    if (t.matches("input,select,button")) {
+    const target = e.target as HTMLElement;
+    if (target.matches("input,select,button")) {
       return;
     }
     if (e.key == "ArrowRight" || e.key == "Space") {
@@ -424,7 +426,7 @@ async function init() {
   /* toggle favorite selection mode */
   const heart = document.querySelector("#heart");
   if (heart) {
-    heart.addEventListener("click", e => {
+    heart.addEventListener("click", () => {
       document.body.classList.toggle("hearts");
     });
   }

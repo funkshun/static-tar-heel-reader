@@ -11,7 +11,7 @@ export interface BookSet {
 
 /* incrementally computes the intersection of two sets */
 export class Intersection implements BookSet {
-  constructor(public A: BookSet, public B: BookSet) {}
+  constructor(public A: BookSet, public B: BookSet) { }
 
   /* a helper to advance both sequences until they match */
   align(a: string, b: string): string {
@@ -22,8 +22,9 @@ export class Intersection implements BookSet {
         b = this.B.skipTo(a);
       }
     }
-    return (a && b) || '';
+    return ((a && b) && a == b) ? a : '';
   }
+
   public next(): string {
     /* we know we can call next on both because they must have matched
      * last time */
@@ -31,8 +32,9 @@ export class Intersection implements BookSet {
     let b = this.B.next();
     return this.align(a, b);
   }
-  public skipTo(v: string): string {
-    let a = this.A.skipTo(v);
+
+  public skipTo(val: string): string {
+    let a = this.A.skipTo(val);
     let b = this.B.skipTo(a);
     return this.align(a, b);
   }
@@ -40,7 +42,8 @@ export class Intersection implements BookSet {
 
 /* incrementally computes the values in A that are not in B */
 export class Difference implements BookSet {
-  constructor(public A: BookSet, public B: BookSet) {}
+  constructor(public A: BookSet, public B: BookSet) { }
+
   public next(): string {
     let a = this.A.next();
     let b = this.B.skipTo(a);
@@ -50,8 +53,9 @@ export class Difference implements BookSet {
     }
     return a;
   }
-  public skipTo(v: string): string {
-    let a = this.A.skipTo(v);
+
+  public skipTo(val: string): string {
+    let a = this.A.skipTo(val);
     let b = this.B.skipTo(a);
     while (a && b && a == b) {
       a = this.A.next();
@@ -62,14 +66,16 @@ export class Difference implements BookSet {
 }
 
 export class Limit implements BookSet {
-  constructor(public A: BookSet, public limit: string) {}
+  constructor(public A: BookSet, public limit: string) { }
+
   public next(): string {
-    const r = this.A.next();
-    return r <= this.limit ? r : "";
+    const result = this.A.next();
+    return (result && result <= this.limit) ? result : "";
   }
-  public skipTo(v: string): string {
-    const r = this.A.skipTo(v);
-    return r <= this.limit ? r : "";
+
+  public skipTo(val: string): string {
+    const result = this.A.skipTo(val);
+    return (result && result <= this.limit) ? result : "";
   }
 }
 
@@ -81,66 +87,80 @@ export class RangeSet implements BookSet {
     public stop: string,
     public digits: number,
     public base: number,
-  ) {}
+  ) { }
+
   current: string;
+  currentNum: number;
+
   public next(): string {
-    if (!this.current) {
+    if (this.current == null) {
       this.current = this.start;
+      this.currentNum = 0;
       return this.current;
+    } else if (this.current == '') {
+      return '';
     }
-    this.current = this.encode(this.decode(this.current) + 1);
+    this.currentNum += 1;
+    this.current = this.encode(this.currentNum);
     if (this.current > this.stop) {
       return '';
     }
     return this.current;
   }
-  public skipTo(v: string) {
-    if (v < this.start) {
-      v = this.start;
+
+  public skipTo(val: string) {
+    if (val < this.start) {
+      val = this.start;
     }
-    this.current = v;
-    if (v > this.stop) {
+    this.current = val;
+    if (val > this.stop) {
       return '';
     }
-    return v;
-  }
-  encode(n: number): string {
-    let r = new Array(this.digits);
-    for (let i = 0; i < this.digits; i++) {
-      r[2 - i] = code[n % this.base];
-      n = (n / this.base) | 0;
-    }
-    return r.join('');
+    return val;
   }
 
-  decode(s: string): number {
-    let r = 0;
+  encode(num: number): string {
+    let digits = new Array(this.digits);
     for (let i = 0; i < this.digits; i++) {
-      r = r * this.base + code.indexOf(s[i]);
+      digits[this.digits - i - 1] = code[num % this.base];
+      num = (num / this.base) | 0;
     }
-    return r;
+    return digits.join('');
+  }
+
+  decode(str: string): number {
+    let res = 0;
+    for (let i = 0; i < this.digits; i++) {
+      res = res * this.base + code.indexOf(str[i]);
+    }
+    return res;
   }
 }
 
 export class StringSet implements BookSet {
   public index: number;
+
   constructor(public values: string, public digits: number) {
     this.index = -digits;
   }
+
   public next(): string {
     this.index += this.digits;
+    // if slice goes out of bounds (e.g. 13 in a 12 length string)
+    // then it returns ''
     return this.values.slice(this.index, this.index + this.digits);
   }
-  public skipTo(t: string) {
-    let c,
-      i = Math.max(0, this.index),
-      v = this.values,
-      d = this.digits;
-    while ((c = v.slice(i, i + d)) && c < t) {
-      i += d;
+
+  public skipTo(val: string) {
+    let curr, idx = Math.max(0, this.index);
+    while ((curr = this.values.slice(idx, idx + this.digits)) && curr < val) {
+      if (curr == '') {
+        break;
+      }
+      idx += this.digits;
     }
-    this.index = i;
-    return c;
+    this.index = idx;
+    return curr;
   }
 }
 
@@ -149,19 +169,24 @@ export class ArraySet implements BookSet {
   constructor(public values: string[]) {
     this.index = -1;
   }
+
   public next(): string {
     this.index += 1;
+    if (this.index >= this.values.length) {
+      return '';
+    }
     return this.values[this.index];
   }
-  public skipTo(t: string) {
-    let c,
-      i = Math.max(0, this.index),
-      v = this.values;
-    while ((c = v[i]) && c < t) {
-      i += 1;
+  public skipTo(val: string) {
+    let curr, idx = Math.max(0, this.index);
+    if (idx >= this.values.length) {
+      return '';
     }
-    this.index = i;
-    return c;
+    while ((curr = this.values[idx]) && curr < val) {
+      idx += 1;
+    }
+    this.index = idx;
+    return (curr) ? curr : '';
   }
 }
 
