@@ -67,7 +67,7 @@ To run the test suite, run the command `make test`. This runs the command `jest 
 
 ## Deployment  
 
-???
+Running `generate.py` with its arguments generates a folder (by default, named `dist`), which includes all the necessary files for a version of the Static Tar Heel Reader. This folder can be zipped and placed onto the distribution website ([GitHub](https://gitlab.com/funkshun/static-tarheel-download), [Site](http://static-tarheel-download.azurewebsites.net/)), which is currently hosted on UNC Cloud Apps (which uses Microsoft Azure), though we have plans to look into other options including iBiblio. From there, users can download the file, unzip it in their web server, and get reading!
 
 ## Technologies Used
 
