@@ -6,11 +6,7 @@
   },
   "test": "jest",
   "devDependencies": {
-<<<<<<< HEAD
-    "@types/jest": "^24.0.18",
-=======
     "@types/jest": "^24.0.23",
->>>>>>> 3715e58d8794998e0e69c13c67856c98350771d8
     "typescript": "^3.6.4"
   },
   "dependencies": {

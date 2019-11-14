@@ -187,6 +187,7 @@ async function find() {
     }
     if (terms.length == 0) {
       terms.push("AllAvailable");
+      setTimeout(function() { alert("my message"); }, 1000);
     }
 
     console.log('Terms: ' + terms);
