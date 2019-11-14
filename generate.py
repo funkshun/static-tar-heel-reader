@@ -15,6 +15,7 @@ from re import findall as regex_findall, IGNORECASE
 from requests import Session
 from nltk.stem.porter import PorterStemmer
 from nltk.corpus import stopwords
+from nltk import download as nltk_download
 from spellchecker import SpellChecker
 from contractions import fix as contractions_fix
 from pandas import DataFrame
@@ -96,10 +97,8 @@ spell = SpellChecker()
 stemmer = PorterStemmer()
 
 # get stop words (the, is, are, etc.)
+nltk_download('stopwords')
 stop_words = set(stopwords.words('english'))
-# TODO: question - filter based on if a word is a stop word or if it stems to a stem of a stop word?
-# note using this gives 463 less (words x slugs) pairs and 43 less index entries
-# stop_words_stems = set([stemmer.stem(word) for word in stop_words])
 
 def getWords(book, stemmer):
     """Return words from the book

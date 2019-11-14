@@ -52,7 +52,11 @@ section#done {
 }
 
 #done a:hover {
-  filter: invert(100);
+  border-color: black !important;
+  box-shadow: 0em 0em 2.5em .10em black !important;
+  z-index: 10;
+  transition: all .2s ease-in-out;
+  transform: scale(1.05);
 }
 
 h1 {
