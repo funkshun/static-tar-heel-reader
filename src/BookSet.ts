@@ -69,8 +69,12 @@ export class Limit implements BookSet {
   constructor(public A: BookSet, public limit: string) { }
 
   public next(): string {
+    try {
     const result = this.A.next();
     return (result && result <= this.limit) ? result : "";
+    } catch (e) {
+      console.log("Error: " + e);
+    }
   }
 
   public skipTo(val: string): string {

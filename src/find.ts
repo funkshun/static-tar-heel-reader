@@ -187,7 +187,7 @@ async function find() {
     }
     if (terms.length == 0) {
       terms.push("AllAvailable");
-      setTimeout(function() { alert("my message"); }, 1000);
+    
     }
 
     console.log('Terms: ' + terms);
@@ -249,6 +249,7 @@ async function render() {
 
   // determine where to start
   let offset = page * state.booksPerPage;
+  
   console.log(page, state.booksPerPage, offset);
   for (let i = 0; i <= state.booksPerPage; i++) {
     const currOffset = i + offset;
@@ -262,6 +263,12 @@ async function render() {
     }
     const book = await getBookCover(bid);
     list.appendChild(book);
+  }
+
+  if (list.getElementsByTagName("li").length === 0){
+    let node = document.createTextNode("Nothing Found");
+    list.appendChild(node);
+
   }
   state.persist();
 
