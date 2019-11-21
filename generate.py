@@ -114,7 +114,7 @@ def getWords(book, stemmer):
         words += [
             stemmer.stem(word).lower()
             for word in regex_findall(r"[a-z]+", text, flags=IGNORECASE)
-            if spell.known(words=[word]) and word not in stop_words
+            if spell.known(words=[word]) and word.lower() not in stop_words
         ]
         # do this?
         # words = [word for word in words if word not in stop_words_stems]
