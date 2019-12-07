@@ -33,12 +33,7 @@ import { registerServiceWorker } from "./start-sw.js";
 
 import {
   BookSet,
-  Intersection,
-  Difference,
-  Limit,
-  RangeSet,
-  StringSet,
-  ArraySet
+  BookSetModel
 } from "./BookSet.js";
 
 import speak from "./speech.js";
@@ -76,16 +71,7 @@ async function getIndexForTerm(term: string): Promise<BookSet | null> {
 
   if (resp.ok) { // i.e. if the term exists in our index
     const text = await resp.text();
-    if (text.indexOf("-") > 0) {
-      // happens with the AllAvailable index only
-      const parts = text.split("-");
-      // RangeSet iterates from one encoding to another
-      return new RangeSet(parts[0], parts[1], config.digits, config.base);
-    } else {
-      // StringSet iterates over a string according to a given iterator amount (here, the (number of) 
-      // digits used to represent the book ID)
-      return new StringSet(text, config.digits);
-    }
+    return new BookSetModel(text, config.digits, config.base);
   }
 
   // term is not in the index - maybe it's a substring?
@@ -94,15 +80,15 @@ async function getIndexForTerm(term: string): Promise<BookSet | null> {
     const text: string = await respAll.text();
     const words: string[] = text.split(' ');
     const substrings: string[] = words.filter(word => word.indexOf(term) >= 0);
-    let result = null;
+    let result: BookSet = null;
     for (let str of substrings) {
       const respTerm = await fetch('content/index/' + str);
       const books = await respTerm.text();
-      const currBook = new StringSet(books, config.digits);
+      const currBook = new BookSetModel(books, config.digits, config.base);
       if (result == null) {
         result = currBook;
       } else {
-        result = new Intersection(result, currBook);
+        result.intersect(currBook);
       }
     }
     return result;
@@ -122,7 +108,7 @@ async function getBookCover(bid: string): Promise<HTMLElement | null> {
     "/";
   const db = await openDB<CoverDB>("Covers", 1, {
     upgrade(db) {
-      const store = db.createObjectStore("covers", {
+      db.createObjectStore("covers", {
         keyPath: "id"
       });
     }
@@ -168,13 +154,12 @@ async function getBookCover(bid: string): Promise<HTMLElement | null> {
 }
 
 let ids: BookSet;
-// keep track of the ids we have shown
-const displayedIds = <string[]>[];
+const pages = <string[][]>[];
 let page = 0;
 
 async function find() {
   if (state.mode === "choose" || state.mode === "edit") {
-    ids = new ArraySet(state.fav.bookIds);
+    ids = new BookSetModel(state.fav.bookIds.join(''), config.digits, config.base);
   } else {
     let terms = getQueryTerms();
     if (state.category) {
@@ -201,41 +186,60 @@ async function find() {
       } else if (!c) {
         return p;
       }
-      return new Intersection(p, c);
+      p.intersect(c);
+      return p;
     });
 
+    if (!ids) {
+      ids = new BookSetModel('', config.digits, config.base);
+    }
+
     if (state.reviewed) {
-      ids = new Limit(ids, config.lastReviewed);
+      ids.limit(config.lastReviewed);
     }
     if (state.audience == "E") {
       const caution = await getIndexForTerm("CAUTION");
-      ids = new Difference(ids, caution);
+      ids.difference(caution);
     }
   }
 
+  const sortBox: HTMLSelectElement = document.getElementById('sort') as HTMLSelectElement;
+  const sortValue = sortBox.options[sortBox.selectedIndex].value;
+
+  const arrowValue = document.getElementById('arrow').getAttribute('value');
+
+  await ids.sort(sortValue, arrowValue == '↓');
+
   console.log(ids);
 
-  displayedIds.length = 0;
+  // clear the pages before building them again
+  pages.length = 0;
+  const values = ids.values;
+  let curr = 0, size = state.booksPerPage;
+  let currSlice;
+  while ((currSlice = values.slice(curr, curr + size))) {
+    if (currSlice.length == 0) break;
+    pages.push(currSlice);
+    curr += size;
+  }
+
+  console.log(pages);
+
+  // displayedIds.length = 0;
 
   if (location.hash) {
+    // if the URL is followed by a # (e.g. #p1)
     const backFrom = location.hash.slice(1);
     console.log("skipping to", backFrom);
     // configure things so we're on the page with the current book
-    while (1) {
-      let id = "";
-      for (let i = 0; i < state.booksPerPage; i++) {
-        id = ids.next();
-        if (!id) {
-          break;
-        }
-        displayedIds.push(id);
+    const size = pages.length;
+    for (let i = 0; i < size; i++) {
+      const index = pages[i].indexOf(backFrom);
+      if (index != -1) {
+        page = i;
+        break;
       }
-      if (displayedIds[displayedIds.length - 1] >= backFrom) break;
     }
-    page = Math.max(
-      0,
-      Math.floor(displayedIds.length / state.booksPerPage) - 1
-    );
   }
   return render();
 }
@@ -247,28 +251,21 @@ async function render() {
   while ((last = list.lastChild)) list.removeChild(last);
 
   // determine where to start
-  let offset = page * state.booksPerPage;
-  console.log(page, state.booksPerPage, offset);
-  for (let i = 0; i <= state.booksPerPage; i++) {
-    const currOffset = i + offset;
-    const bid = displayedIds[currOffset] || ids.next();
-    if (!bid) {
-      break;
+  if (pages.length > 0) {
+    const booksToShow = pages[page];
+    const numBooks = booksToShow.length;
+    for (let i = 0; i < numBooks; i++) {
+      const book = await getBookCover(booksToShow[i]);
+      list.appendChild(book);
     }
-    displayedIds[currOffset] = bid;
-    if (i >= state.booksPerPage) {
-      break;
-    }
-    const book = await getBookCover(bid);
-    list.appendChild(book);
+    state.persist();
   }
-  state.persist();
 
   // visibility of back and next buttons
   document.querySelector("#back").classList.toggle("hidden", page <= 0);
   document
     .querySelector("#next")
-    .classList.toggle("hidden", !displayedIds[(page + 1) * state.booksPerPage]);
+    .classList.toggle("hidden", page == pages.length - 1 || pages.length == 0);
 }
 
 function updateState(): void {
@@ -341,6 +338,29 @@ function toggleFavorite(selected: HTMLElement) {
   }
 }
 
+function flip(selected: HTMLElement) {
+  const value = selected.getAttribute('value');
+  if (value == "↑") {
+    selected.setAttribute('value', '↓');
+  } else {
+    selected.setAttribute('value', '↑');
+  }
+
+  ids.reverse();
+
+  // clear the pages before building them again
+  pages.length = 0;
+  const values = ids.values;
+  let curr = 0, size = state.booksPerPage;
+  let currSlice;
+  while ((currSlice = values.slice(curr, curr + size))) {
+    if (currSlice.length == 0) break;
+    pages.push(currSlice);
+    curr += size;
+  }
+  render();
+}
+
 async function init() {
   /* restore page and text color */
   document.documentElement.style.setProperty("--page-color", state.pageColor);
@@ -371,10 +391,25 @@ async function init() {
     form.reviewed.value = state.reviewed ? "R" : "";
     form.category.value = state.category;
     form.audience.value = state.audience;
+    form.sort.value = state.sortValue;
   } else {
     state.mode = "choose";
     document.querySelector("h1.title").innerHTML = state.fav.name;
   }
+
+  /* add listener for click on arrow */
+  const arrow = document.getElementById('arrow');
+  arrow.addEventListener('click', e => {
+    e.preventDefault();
+    flip(e.target as HTMLElement);
+  });
+
+  document.getElementById('sort').addEventListener('change', e => {
+    const target = e.target as HTMLSelectElement;
+    const sortValue = target.options[target.selectedIndex].value;
+    state.sortValue = sortValue;
+    state.persist();
+  })
 
   /* enable stepping through pages of results */
   document.querySelector("#next").addEventListener("click", e => {
@@ -383,6 +418,7 @@ async function init() {
     page += 1;
     render();
   });
+
   document.querySelector("#back").addEventListener("click", e => {
     e.preventDefault();
     (e.target as HTMLElement).classList.remove("selected");

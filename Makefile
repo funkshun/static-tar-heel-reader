@@ -1,4 +1,4 @@
-pages: dist/find.html dist/settings.html dist/favorites.html dist/choose.html dist/index.html dist/web_modules/stemr.js dist/web_modules/idb.js
+pages: dist/find.html dist/settings.html dist/favorites.html dist/choose.html dist/collections.html dist/index.html dist/web_modules/stemr.js dist/web_modules/idb.js
 
 dist/%.html: src/%.html
 	python3 ./copypage.py $<
@@ -12,6 +12,8 @@ dist/settings.html: src/settings.html src/settings.css src/head.mako src/menu.ma
 dist/index.html: src/index.html src/index.css src/head.mako
 
 dist/favorites.html: src/favorites.html src/favorites.css src/head.mako
+
+dist/collections.html: src/collections.html src/collections.css src/collections.mako
 
 dist/web_modules/stemr.js: src/web_modules/stemr.js
 	mkdir -p dist/web_modules
@@ -35,6 +37,9 @@ test:
 
 fetch:
 	cd data && python3 fetchBooks.py $(out)
+
+fetch-collections:
+	cd data && python3 fetchCollections.py
 
 generate:
 	python3 generate.py out="./dist" Nselect=$(Nselect)

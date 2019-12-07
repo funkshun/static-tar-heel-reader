@@ -109,7 +109,12 @@ form>input[type="submit"] {
   max-width: 10%;
 }
 
-form>input[type="submit"]:hover {
+form>input[type="button"] {
+  background-color: #c4c4c4;
+  vertical-align: middle;
+}
+
+form>input[type="submit"]:hover,form>input[type="button"]:hover {
   box-shadow: 0em 0em .5em .10em black !important;
   z-index: 10;
   transition: all .2s ease-in-out;

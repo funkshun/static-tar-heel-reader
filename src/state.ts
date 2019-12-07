@@ -8,6 +8,7 @@ class State {
   public reviewed = true;
   public category = "";
   public audience = "E";
+  public sortValue = "id";
   public booksPerPage = 9;
   public pageColor = "#fff";
   public textColor = "#000";

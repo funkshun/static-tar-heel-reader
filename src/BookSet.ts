@@ -1,125 +1,54 @@
 /* Experiment with a class to represent sets of books */
 
 export interface BookSet {
-  /* next() provides the next book id in sequence or "" when exhausted */
-  next: () => string;
+  values: string[];
 
-  /* skipTo(value) returns the next bid equal to or greater than value
-   * or "" if exhausted */
-  skipTo: (value: string) => string;
+  intersect: (other: BookSet) => void;
+  difference: (other: BookSet) => void;
+  limit: (limiter: string) => void;
+
+  // sorts by given value
+  sort: (attrib: string, reverse: boolean) => void;
+  reverse: () => void;
 }
 
-/* incrementally computes the intersection of two sets */
-export class Intersection implements BookSet {
-  constructor(public A: BookSet, public B: BookSet) { }
-
-  /* a helper to advance both sequences until they match */
-  align(a: string, b: string): string {
-    while (a && b && a != b) {
-      if (a < b) {
-        a = this.A.skipTo(b);
-      } else {
-        b = this.B.skipTo(a);
-      }
-    }
-    return ((a && b) && a == b) ? a : '';
-  }
-
-  public next(): string {
-    /* we know we can call next on both because they must have matched
-     * last time */
-    let a = this.A.next();
-    let b = this.B.next();
-    return this.align(a, b);
-  }
-
-  public skipTo(val: string): string {
-    let a = this.A.skipTo(val);
-    let b = this.B.skipTo(a);
-    return this.align(a, b);
-  }
+const intersectUtil = (left: string[], right: string[]): string[] => {
+  return left.filter((val) => right.includes(val));
 }
 
-/* incrementally computes the values in A that are not in B */
-export class Difference implements BookSet {
-  constructor(public A: BookSet, public B: BookSet) { }
-
-  public next(): string {
-    let a = this.A.next();
-    let b = this.B.skipTo(a);
-    while (a && b && a == b) {
-      a = this.A.next();
-      b = this.B.skipTo(a);
-    }
-    return a;
-  }
-
-  public skipTo(val: string): string {
-    let a = this.A.skipTo(val);
-    let b = this.B.skipTo(a);
-    while (a && b && a == b) {
-      a = this.A.next();
-      b = this.B.skipTo(a);
-    }
-    return a;
-  }
+const differenceUtil = (left: string[], right: string[]): string[] => {
+  return left.filter((val) => !right.includes(val));
 }
 
-export class Limit implements BookSet {
-  constructor(public A: BookSet, public limit: string) { }
+export abstract class AbstractBookSetModel implements BookSet {
+  public values: string[];
 
-  public next(): string {
-    const result = this.A.next();
-    return (result && result <= this.limit) ? result : "";
+  public intersect = (other: AbstractBookSetModel) => {
+    this.values = intersectUtil(this.values, other.values);
   }
 
-  public skipTo(val: string): string {
-    const result = this.A.skipTo(val);
-    return (result && result <= this.limit) ? result : "";
+  public difference = (other: AbstractBookSetModel) => {
+    this.values = differenceUtil(this.values, other.values);
   }
+
+  limit: (limiter: string) => void;
+
+  sort: (attrib: string, reverse: boolean) => void;
+  reverse: () => void;
 }
 
 const code = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
-export class RangeSet implements BookSet {
-  constructor(
-    public start: string,
-    public stop: string,
-    public digits: number,
-    public base: number,
-  ) { }
+export class EncoderDecoder {
+  public digits: number;
+  public base: number;
 
-  current: string;
-  currentNum: number;
-
-  public next(): string {
-    if (this.current == null) {
-      this.current = this.start;
-      this.currentNum = 0;
-      return this.current;
-    } else if (this.current == '') {
-      return '';
-    }
-    this.currentNum += 1;
-    this.current = this.encode(this.currentNum);
-    if (this.current > this.stop) {
-      return '';
-    }
-    return this.current;
+  public constructor(digits: number, base: number) {
+    this.digits = digits;
+    this.base = base;
   }
 
-  public skipTo(val: string) {
-    if (val < this.start) {
-      val = this.start;
-    }
-    this.current = val;
-    if (val > this.stop) {
-      return '';
-    }
-    return val;
-  }
-
-  encode(num: number): string {
+  public encode = (num: number): string => {
     let digits = new Array(this.digits);
     for (let i = 0; i < this.digits; i++) {
       digits[this.digits - i - 1] = code[num % this.base];
@@ -128,7 +57,7 @@ export class RangeSet implements BookSet {
     return digits.join('');
   }
 
-  decode(str: string): number {
+  public decode = (str: string): number => {
     let res = 0;
     for (let i = 0; i < this.digits; i++) {
       res = res * this.base + code.indexOf(str[i]);
@@ -137,56 +66,68 @@ export class RangeSet implements BookSet {
   }
 }
 
-export class StringSet implements BookSet {
-  public index: number;
+export class BookSetModel extends AbstractBookSetModel {
+  public digits: number;
+  public base: number;
 
-  constructor(public values: string, public digits: number) {
-    this.index = -digits;
+  constructor(str: string, digits: number, base: number) {
+    super();
+    this.digits = digits;
+    this.base = base;
+    if (!str) {
+      this.values = [];
+    } else if (str.includes('-')) {
+      this.buildFromRange(str, digits, base);
+    } else {
+      this.buildFromString(str, digits);
+    }
   }
 
-  public next(): string {
-    this.index += this.digits;
-    // if slice goes out of bounds (e.g. 13 in a 12 length string)
-    // then it returns ''
-    return this.values.slice(this.index, this.index + this.digits);
+  private buildFromRange = (str: string, digits: number, base: number): void => {
+    const encoderdecoder = new EncoderDecoder(digits, base);
+    const [start, stop] = str.split('-').map(encoderdecoder.decode);
+    const range: number[] = [...Array(stop - start + 1).keys()].map(i => i + start);
+    this.values = range.map(encoderdecoder.encode);
   }
 
-  public skipTo(val: string) {
-    let curr, idx = Math.max(0, this.index);
-    while ((curr = this.values.slice(idx, idx + this.digits)) && curr < val) {
-      if (curr == '') {
-        break;
+  private buildFromString = (str: string, digits: number): void => {
+    const regexPattern = ".{1," + digits + "}";
+    const regex = new RegExp(regexPattern, 'g');
+    this.values = str.match(regex); // split into digits sized chunks
+  }
+
+  public limit = (limiter: string): void => {
+    const encoderdecoder = new EncoderDecoder(this.digits, this.base);
+    const valuesMapped = this.values.map(encoderdecoder.decode);
+    const limitingValue = encoderdecoder.decode(limiter);
+    this.values = valuesMapped.filter((elem) => elem <= limitingValue).map(encoderdecoder.encode);
+  }
+
+  public reverse = () => {
+    this.values.reverse();
+  }
+
+  public sort = async (attrib: string, reverse: boolean): Promise<void> => {
+    if (attrib == 'id') {
+      const encoderdecoder = new EncoderDecoder(this.digits, this.base);
+      const idsSorted = this.values.map(encoderdecoder.decode);
+      idsSorted.sort((valOne, valTwo) => valOne - valTwo);
+      if (reverse) {
+        idsSorted.reverse();
       }
-      idx += this.digits;
+      this.values = idsSorted.map(encoderdecoder.encode);
+    } else if (attrib == 'author' || attrib == 'ratingcount' || attrib == 'rating' || attrib == 'title') {
+      const resp = await fetch('content/sort/' + attrib);
+      if (resp.ok) {
+        const text = await resp.text();
+        const other: BookSetModel = new BookSetModel(text, this.digits, this.base);
+        other.intersect(this);
+        this.values = other.values;
+        if (reverse) {
+          this.values.reverse();
+        }
+      }
     }
-    this.index = idx;
-    return curr;
-  }
-}
-
-export class ArraySet implements BookSet {
-  public index: number;
-  constructor(public values: string[]) {
-    this.index = -1;
-  }
-
-  public next(): string {
-    this.index += 1;
-    if (this.index >= this.values.length) {
-      return '';
-    }
-    return this.values[this.index];
-  }
-  public skipTo(val: string) {
-    let curr, idx = Math.max(0, this.index);
-    if (idx >= this.values.length) {
-      return '';
-    }
-    while ((curr = this.values[idx]) && curr < val) {
-      idx += 1;
-    }
-    this.index = idx;
-    return (curr) ? curr : '';
   }
 }
 

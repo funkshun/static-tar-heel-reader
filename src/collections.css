@@ -1,0 +1,162 @@
+div#body {
+    padding: 10px;
+    border: 1px solid rgb(86, 160, 211);
+    border-radius: 10%;
+    height: 100vh;
+}
+
+ul {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    padding: 0;
+}
+
+li {
+    width: 11em;
+    height: 11em;
+    overflow: hidden;
+    border: 1px solid black;
+    border-radius: 0.25em;
+    text-align: center;
+    position: relative;
+    box-shadow: 0.1em 0.1em 0.1em #aaa;
+    margin-bottom: 0.5em;
+}
+
+li span {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    padding: 1em;
+    font-size: 0.6em;
+}
+
+li p {
+    font-size: 0.8em;
+}
+
+li h1 {
+    font-size: 1em;
+    margin-top: 0;
+    text-align: center;
+}
+
+li a {
+    display: block;
+    text-decoration: none;
+    height: 100%;
+    color: inherit;
+}
+
+li a img {
+    flex: 1;
+    object-fit: contain;
+    min-height: 0;
+    height: 6em;
+    max-width: 6em;
+}
+
+li.R {
+    background: no-repeat bottom 1em left 1em / 1em url("${copy('images/reviewed.png')}");
+}
+
+li.C {
+    background: no-repeat bottom 2em left 1em / 1em url("${copy('images/caution.png')}");
+}
+
+li.C.R {
+    background: no-repeat bottom 1em left 1em / 1em url("${copy('images/reviewed.png')}"), no-repeat bottom 2em left 1em / 1em url("${copy('images/caution.png')}");
+}
+
+li.R.F {
+    background: no-repeat bottom 1em left 1em / 1em url("${copy('images/reviewed.png')}"), no-repeat bottom 3em left 1em / 1em url("${copy('images/favorite.png')}");
+}
+
+li.C.F {
+    background: no-repeat bottom 2em left 1em / 1em url("${copy('images/caution.png')}"), no-repeat bottom 3em left 1em / 1em url("${copy('images/favorite.png')}");
+}
+
+li.C.R.F {
+    background: no-repeat bottom 1em left 1em / 1em url("${copy('images/reviewed.png')}"), no-repeat bottom 2em left 1em / 1em url("${copy('images/caution.png')}"), no-repeat bottom 3em left 1em / 1em url("${copy('images/favorite.png')}");
+}
+
+li:hover, a.next:hover, a.back:hover {
+    border-color: black !important;
+    box-shadow: 0em 0em 2.5em .10em black !important;
+    z-index: 10;
+    transition: all .2s ease-in-out;
+    transform: scale(1.05);
+}
+
+input, select, button {
+    font-size: 1em;
+    margin-top: 0.5em;
+}
+
+a.hidden {
+    display: none;
+}
+
+body[data-buttonsize="none"] a.selected {
+    display: block;
+}
+
+a#menu {
+    float: left;
+    height: 48px;
+}
+
+.hearts #list li:after {
+    content: "";
+    display: block;
+    position: absolute;
+    /* could also be absolute */
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    z-index: 10;
+    background: no-repeat center / 10em url("${copy('images/FavoriteNoOverlay.png')}");
+}
+
+.hearts #list li.F:after {
+    content: "";
+    display: block;
+    position: absolute;
+    /* could also be absolute */
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    z-index: 1;
+    background: no-repeat center / 10em url("${copy('images/FavoriteYesOverlay.png')}");
+}
+
+#heart {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 48px;
+    width: 48px;
+    border: 0;
+    background: no-repeat center/contain url("${copy('images/favorite.png')}");
+    margin-top: 0;
+}
+
+#heart img {
+    width: 48px;
+}
+
+h1.title {
+    text-align: center;
+    height: 48px;
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+div#collections>a {
+    display:list-item;
+}
+

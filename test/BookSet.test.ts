@@ -1,132 +1,11 @@
 import {
   BookSet,
-  Intersection,
-  Difference,
-  Limit,
-  RangeSet,
-  StringSet,
-  ArraySet
+  BookSetModel,
+  EncoderDecoder
 } from "../src/BookSet";
 
 const digits = 2;
 const base = 16;
-const sets = [
-  "", // empty
-  "1A293648596E", // boy
-  "3662656E6F828A94AF", // girl
-  "1950727D8587", // cat
-  "02131B29364C50585A686E717A9A9C" // dog
-];
-let setset = [];
-for (const s1 of sets) {
-  for (const s2 of sets) {
-    setset.push([s1, s2]);
-  }
-}
-
-/* limits for RangeSets */
-const limits = ["01", "36", "6E", "AF", "9C", "AA"];
-let setlimit = [];
-let limitset = [];
-for (const s1 of sets) {
-  for (const l1 of limits) {
-    setlimit.push([s1, l1]);
-    limitset.push([l1, s1]);
-  }
-}
-
-/* Test helpers */
-
-/* convert a set to an array */
-function s2a(s: string) {
-  const a = s.match(/../g);
-  return a || [];
-}
-
-/* pull all the values from BookSet into an array */
-function pull(bs: BookSet) {
-  const r = [];
-  let c;
-  while ((c = bs.next())) {
-    r.push(c);
-  }
-  return r;
-}
-
-/* compute the intersection using sets */
-function intersect(s1: string, s2: string): string[] {
-  const S1 = new Set(s2a(s1));
-  const S2 = new Set(s2a(s2));
-  const R = new Set();
-  for (const elem of S1) {
-    if (S2.has(elem)) {
-      R.add(elem);
-    }
-  }
-  return Array.from(R).sort() as string[];
-}
-
-/* compute the difference using sets */
-function difference(s1: string, s2: string): string[] {
-  const S1 = new Set(s2a(s1));
-  const S2 = new Set(s2a(s2));
-  const R = new Set();
-  for (const elem of S1) {
-    if (!S2.has(elem)) {
-      R.add(elem);
-    }
-  }
-  return Array.from(R).sort() as string[];
-}
-
-/* limit an array to values less than l */
-function limit(A: string[], l: string) {
-  return A.filter(s => s <= l);
-}
-
-test.each(sets)("StringSet(%s)", s => {
-  expect(pull(new StringSet(s, digits))).toEqual(s2a(s));
-});
-
-test.each(setset)("Intersection(%s, %s)", (s1, s2) => {
-  expect(
-    pull(new Intersection(new StringSet(s1, digits), new StringSet(s2, digits)))
-  ).toEqual(intersect(s1, s2));
-});
-
-test.each(setset)("Difference(%s, %s)", (s1, s2) => {
-  expect(
-    pull(new Difference(new StringSet(s1, digits), new StringSet(s2, digits)))
-  ).toEqual(difference(s1, s2));
-});
-
-test.each(setlimit)("Intersection(%s, RangeSet('00', %s))", (s, l) => {
-  expect(
-    pull(
-      new Intersection(
-        new StringSet(s, digits),
-        new RangeSet("00", l, digits, base)
-      )
-    )
-  ).toEqual(limit(s2a(s), l));
-});
-
-test.each(limitset)("Intersection(RangeSet('00', %s), %s)", (l, s) => {
-  expect(
-    pull(
-      new Intersection(
-        new StringSet(s, digits),
-        new RangeSet("00", l, digits, base)
-      )
-    )
-  ).toEqual(limit(s2a(s), l));
-});
-
-test.each(setlimit)("Limit(%s, %s)", (s, l) => {
-  expect(pull(new Limit(new StringSet(s, digits), l))).toEqual(
-    limit(s2a(s), l)
-  );
-});
 
 const genRandomStrings = (numStrings: number): string[] => {
   const chars = 'abcdefghjiklmnopqrstuvwxyz';
@@ -146,85 +25,113 @@ const genRandomStrings = (numStrings: number): string[] => {
   return strs;
 }
 
-test('Test ArraySet next', () => {
-  // generate some random strings
-  const testStrings = 10;
-  const strs = genRandomStrings(testStrings);
+const code = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
-  let arraySet = new ArraySet(strs);
-  let idx = 0;
-  while (idx < testStrings) {
-    expect(arraySet.next()).toEqual(strs[idx]);
-    idx++;
+const makeARandomStringInBase = (len: number, base: number): string => {
+  let res = '';
+  for (let i = 0; i < len; i++) {
+    res += code.charAt(Math.floor(Math.random() * base));
   }
-  idx = 0;
-  while (idx < testStrings) {
-    expect(arraySet.next()).toEqual('');
-    idx++;
+  return res;
+}
+
+test('Creation of BookSet from string', () => {
+  const tests = 5;
+  const digitsOptions = [2, 3];
+  const baseOptions = [16, 36];
+  for (let digit of digitsOptions) {
+    for (let base of baseOptions) {
+      const len = digit * tests;
+      for (let i = 0; i < tests; i++) {
+        const str = makeARandomStringInBase(len, base);
+        const bookset = new BookSetModel(str, digit, base);
+        const result = [];
+        let slice;
+        let curr = 0;
+        while ((slice = str.slice(curr, curr + digit)) != '') {
+          result.push(slice);
+          curr += digit;
+        }
+        expect(bookset.values).toEqual(result);
+      }
+    }
   }
 });
 
-test('Test ArraySet skipTo', () => {
-  const testStrings = 10;
-  const strs = genRandomStrings(testStrings);
-
-  let idx = 0;
-  while(idx < testStrings) {
-    let arraySet = new ArraySet(strs);
-    // find a random string to skip ahead to
-    let randomString = strs[Math.floor(Math.random() * strs.length)];
-    expect(arraySet.skipTo(randomString)).toEqual(randomString);
-    idx++;
+test('Creation of BookSet from range', () => {
+  const digitsOptions = [2, 3];
+  const baseOptions = [16, 36];
+  const ends = [10, 56, 115];
+  for (let digit of digitsOptions) {
+    for (let base of baseOptions) {
+      for (let end of ends) {
+        const encoderdecoder = new EncoderDecoder(digit, base);
+        const str = encoderdecoder.encode(0) + '-' + encoderdecoder.encode(end);
+        const bookset = new BookSetModel(str, digit, base);
+        const arr = new Array(end + 1);
+        expect(bookset.values.map(encoderdecoder.decode)).toEqual([...arr.keys()]);
+      }
+    }
   }
-
-  const vals = ['apples', 'bananas', 'oranges'];
-  let arraySet = new ArraySet(vals);
-  expect(arraySet.skipTo('bae')).toEqual('bananas');
-  expect(arraySet.skipTo('baseball')).toEqual('oranges');
-  expect(arraySet.skipTo('oranges')).toEqual('oranges');
-  expect(arraySet.skipTo('zebras')).toEqual('');
 });
 
-test('Intersection skipTo', () => {
-  let numsOne = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
-  let numsTwo = ['one', 'four', 'nine', 'sixteen', 'twenty-five'];
-
-  numsOne = numsOne.sort();
-  numsTwo = numsTwo.sort();
-
-  let intersect = new Intersection(new ArraySet(numsOne), new ArraySet(numsTwo));
-  expect(intersect.skipTo('four')).toEqual('four');
-  expect(intersect.skipTo('help')).toEqual('nine');
-  expect(intersect.skipTo('nine')).toEqual('nine');
-  expect(intersect.skipTo('one')).toEqual('one');
-  expect(intersect.skipTo('zebra')).toEqual('');
+test('Intersection', () => {
+  const strOne = 'aabbzzddii';
+  const strTwo = 'bbzzjjkkllppooqq';
+  const booksetOne = new BookSetModel(strOne, 2, 16);
+  const booksetTwo = new BookSetModel(strTwo, 2, 16);
+  booksetOne.intersect(booksetTwo);
+  expect(booksetOne.values).toEqual(['bb', 'zz']);
 });
 
-test('Difference skipTo', () => {
-  let numsOne = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
-  let numsTwo = ['one', 'four', 'nine', 'sixteen', 'twenty-five'];
-
-  numsOne = numsOne.sort();
-  numsTwo = numsTwo.sort();
-
-  let diff = new Difference(new ArraySet(numsOne), new ArraySet(numsTwo));
-
-  expect(diff.skipTo('five')).toEqual('five');
-  expect(diff.skipTo('four')).toEqual('seven');
+test('Difference', () => {
+  const strOne = 'aabbzzddii';
+  const strTwo = 'bbzzjjkkllppooqq';
+  const booksetOne = new BookSetModel(strOne, 2, 16);
+  const booksetTwo = new BookSetModel(strTwo, 2, 16);
+  booksetOne.difference(booksetTwo);
+  expect(booksetOne.values).toEqual(['aa', 'dd', 'ii']);
 });
 
-test('Limit skipTo', () => {
-  let strs = ['apple', 'banana', 'orange', 'peach', 'grape', 'blueberry', 'grapefruit'];
-  strs = strs.sort();
-
-  const limit = new Limit(new ArraySet(strs), strs[Math.floor(strs.length/2)]);
-
-  expect(limit.skipTo('banana')).toEqual('banana');
-  expect(limit.skipTo('grape')).toEqual('grape');
-  expect(limit.skipTo('orange')).toEqual('');
+test('Limit', () => {
+  const digits = [2, 3];
+  const bases = [16, 36];
+  const ends = [10, 56, 115];
+  for (let digit of digits) {
+    for (let base of bases) {
+      for (let end of ends) {
+        const encoderdecoder = new EncoderDecoder(digit, base);
+        const str = encoderdecoder.encode(0) + '-' + encoderdecoder.encode(end);
+        const bookset = new BookSetModel(str, digit, base);
+        const limit = encoderdecoder.encode(Math.floor(Math.random() * end));
+        bookset.limit(limit);
+        const result = [...new Array(encoderdecoder.decode(limit) + 1).keys()];
+        expect(bookset.values.map(encoderdecoder.decode)).toEqual(result);
+      }
+    }
+  }
 });
 
-test('RangeSet skipTo', () => {
-  let rangeset = new RangeSet('02', '10', 2, 16);
-  expect(rangeset.skipTo('01')).toEqual('02');
-})
+test('Empty String', () => {
+  const booksetEmpty = new BookSetModel('', digits, base);
+  expect(booksetEmpty.values).toEqual([]);
+});
+
+test('Reverse', () => {
+  const digits = [2, 3];
+  const bases = [16, 36];
+  const ends = [10, 56, 115];
+  for (let digit of digits) {
+    for (let base of bases) {
+      for (let end of ends) {
+        const encoderdecoder = new EncoderDecoder(digit, base);
+        const str = encoderdecoder.encode(0) + '-' + encoderdecoder.encode(end);
+        const bookset = new BookSetModel(str, digit, base);
+        bookset.reverse();
+        const result = [...new Array(end + 1).keys()];
+        result.reverse();
+        expect(bookset.values.map(encoderdecoder.decode)).toEqual(result);
+      }
+    }
+  }
+});

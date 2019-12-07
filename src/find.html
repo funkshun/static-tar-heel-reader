@@ -46,6 +46,16 @@
         <option value="C">Rated C/Caution</option>
         <option value="">Any rating</option>
       </select>
+      <select id="sort" name="sort">
+        <option disabled="disabled" value="">Sort By</option>
+        <option value="id">ID</option>
+        <option value="author">Author</option>
+        <option value="rating">Rating</option>
+        <option value="ratingcount">Rating Count</option>
+        <option value="title">Title</option>
+      </select>
+      <input type="button" id="arrow" value="&#8593;" />
+      <!-- up arrow is  &#8593; down arrow is &#8595; -->
       <input type="hidden" value="1" id="page" name="page" />
       <input type="submit" value="Search" />
     </form>

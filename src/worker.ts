@@ -10,7 +10,7 @@ workbox.loadModule("workbox-precaching");
 // route for fetching images
 workbox.routing.registerRoute(
   /\.(?:jpg|png)$/,
-  new workbox.strategies.CacheFirst({
+  new workbox.strategies.NetworkFirst({
     cacheName: "img-cache",
     plugins: [
       new workbox.expiration.Plugin({
@@ -23,7 +23,7 @@ workbox.routing.registerRoute(
 // route for html, css, js, or json files
 workbox.routing.registerRoute(
   /\.(?:html|css|js|json)$/,
-  new workbox.strategies.CacheFirst({
+  new workbox.strategies.NetworkFirst({
     cacheName: "html-cache",
     plugins: [
       new workbox.expiration.Plugin({
@@ -48,7 +48,7 @@ workbox.routing.registerRoute(/.\/content\/index\/ALLWORDS$/, async () => {
 
 workbox.routing.registerRoute(
   /.\/content\/index/,
-  new workbox.strategies.CacheFirst({
+  new workbox.strategies.NetworkFirst({
     cacheName: "index-cache",
     plugins: [
       new workbox.expiration.Plugin({
@@ -63,7 +63,8 @@ async function getAllAvailableIDs(): Promise<string> {
   if (navigator.onLine) {
     let id_req = await fetch("./content/index/AllAvailable");
     if (id_req.ok) {
-      return id_req.text();
+      const text = await id_req.text();
+      return text;
     }
   }
 
