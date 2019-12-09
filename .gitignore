@@ -10,5 +10,5 @@ coverage
 content/
 __pycache__/
 .vscode
-*.gz
+
 data/*.txt
